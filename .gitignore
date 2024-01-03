@@ -1,5 +1,9 @@
 # JetBrains PyCharm IDE
 .idea/
+# VS Code
+.vscode/
+.history/
+*.vsix
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
