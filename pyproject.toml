@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "fbk-llm"
+version = "0.0.1"
+authors = [
+  { name="FBK MT Unit", email="mt@fbk.eu" },
+]
+description = "FBK MT Unit Library for working with LLM and foundation models."
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: Apache-2.0",
+    "Operating System :: OS Independent",
+    "Topic :: Neural Networks :: LLM",
+]
+dependencies = [
+]
+
+[project.urls]
+"Homepage" = "https://github.com/hlt-mt/fbk-llm"
+"Bug Tracker" = "https://github.com/hlt-mt/fbk-llm/issues"
+
+[project.optional-dependencies]
+dev = ["flake8", "pytest", "requests"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
