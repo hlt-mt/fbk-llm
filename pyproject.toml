@@ -18,6 +18,8 @@ classifiers = [
     "Topic :: Neural Networks :: LLM",
 ]
 dependencies = [
+    "numpy", "seaborn", "argparse", "transformers[torch]>4.36", "torch", "pandas",
+    "datasets[audio]", "protobuf", "pyyaml"
 ]
 
 [project.urls]
@@ -29,3 +31,6 @@ dev = ["flake8", "pytest", "requests"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[project.scripts]
+whisper-gen = "speech_foundation_models.cli.whisper_gen:cli_script"
