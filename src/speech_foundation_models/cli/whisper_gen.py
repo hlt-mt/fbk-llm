@@ -33,7 +33,7 @@ LOGGER = logging.getLogger(__name__)
 
 def main(args: argparse.Namespace):
     LOGGER.info(f"Parsed args: {args}")
-    assert args.max_tokens < 444, \
+    assert args.max_tokens <= 444, \
         f"Invalid max-tokens ({args.max_tokens}). " \
         "Whisper max_length is 448 and we reserve 4 tokens for the prefix."
     processor = AutoProcessor.from_pretrained(args.hf_model_name)
