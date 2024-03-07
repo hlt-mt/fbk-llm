@@ -37,7 +37,12 @@ def main(args: argparse.Namespace):
         f"Invalid max-tokens ({args.max_tokens}). " \
         "Whisper max_length is 448 and we reserve 4 tokens for the prefix."
     processor = AutoProcessor.from_pretrained(args.hf_model_name)
-    model = WhisperForConditionalGeneration.from_pretrained(args.hf_model_name)
+    torch_dtype = torch.float16 if torch.cuda.is_available() else torch.float32
+    model = WhisperForConditionalGeneration.from_pretrained(
+        args.hf_model_name,
+        torch_dtype=torch_dtype,
+        use_safetensors=True,
+        use_flash_attention_2=args.use_flash_attention)
     model.eval()
     if torch.cuda.is_available() and not args.cpu:
         model = model.cuda()
@@ -56,6 +61,7 @@ def main(args: argparse.Namespace):
         batch_size=args.batch_size,
         return_timestamps=False,
         device=model.device,
+        torch_dtype=torch_dtype,
         return_language=True,
         generate_kwargs=generate_kwargs
     )

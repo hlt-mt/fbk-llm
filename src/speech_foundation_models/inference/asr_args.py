@@ -73,6 +73,10 @@ def add_whisper_args(parser: argparse.ArgumentParser):
         '--source-lang', type=str,
         help="the language of the audio to transcribe/translate. "
              "If not set, it is predicted automatically")
+    parser.add_argument(
+        '--use-flash-attention', default=False, action='store_true',
+        help="if set, use Flash Attention 2 implementation. It requires installing flash-attn."
+             "See https://huggingface.co/openai/whisper-large-v3#flash-attention.")
 
 
 def add_logging_args(parser: argparse.ArgumentParser):
