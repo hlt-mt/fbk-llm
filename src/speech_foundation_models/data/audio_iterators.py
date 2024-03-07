@@ -16,8 +16,8 @@ import logging
 import os
 from typing import Any
 
+import soundfile
 import yaml
-from transformers.pipelines.audio_utils import ffmpeg_read
 
 
 LOGGER = logging.getLogger(__name__)
@@ -58,8 +58,12 @@ class VoxpopuliIterator(AudioIterator):
         return self.config[attr]
 
     def _read_audio_file(self, filename):
-        with open(filename, "rb") as f:
-            return ffmpeg_read(f.read(), self.sampling_rate)
+        audio_content, sample_rate = soundfile.read(
+            filename, dtype='float32', always_2d=True)
+        assert sample_rate == self.sampling_rate, \
+            (f"Audio with sampling rate ({sample_rate}) not expected. "
+             f"Expected rate was: {self.sampling_rate}")
+        return audio_content[:, 0]  # return always the first channel
 
     def __iter__(self):
         with open(self.tsv_segments, 'r') as f:
