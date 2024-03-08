@@ -15,6 +15,8 @@ import os.path
 import unittest
 from unittest.mock import patch, mock_open
 
+import numpy as np
+
 from speech_foundation_models.data.audio_iterators import VoxpopuliIterator
 
 VALID_CONFIG_YAML = f"""
@@ -55,6 +57,19 @@ class VoxpopuliIteratorTestCase(unittest.TestCase):
             with patch('builtins.open', new_callable=mock_open, read_data="tsv_segments: aaa\n"):
                 _ = VoxpopuliIterator("config.yaml", 16000)
         self.assertTrue('should contain attribute `lang`' in str(context.exception))
+
+    @patch(
+        f"{VoxpopuliIterator.__module__}.{VoxpopuliIterator.__name__}._read_audio_file",
+        return_value=np.array([1]))
+    def test_skipping_generated_samples(self, mock_read_audio_file):
+        with patch('builtins.open', new_callable=mock_open, read_data=VALID_CONFIG_YAML):
+            vox_iter = VoxpopuliIterator("config.yaml", 16000)
+        fake_gen_file_content = "id\tlanguage\ttext\n20200113-0900-PLENARY_it_0\tit\taa\n"
+        with patch('builtins.open', new_callable=mock_open, read_data=fake_gen_file_content):
+            vox_iter.add_generated_samples_skipper("fake_out_file.tsv")
+        iter_out = list(vox_iter)
+        self.assertEqual(1, len(iter_out))
+        self.assertEqual("20200113-0900-PLENARY_it_1", iter_out[0]['id'])
 
 
 if __name__ == '__main__':

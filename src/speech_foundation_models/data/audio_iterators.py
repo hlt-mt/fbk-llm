@@ -14,13 +14,22 @@
 import csv
 import logging
 import os
-from typing import Any
+from typing import Any, Optional
 
 import soundfile
 import yaml
 
 
 LOGGER = logging.getLogger(__name__)
+
+
+class SamplesSkipper:
+    """
+    Interface for methods to determine whether a sample should be skipped or not.
+    """
+    def should_skip(self, sample_id):
+        raise NotImplementedError(
+            f"The instance {self.__class__} of SamplesSkipper must implement should_skip")
 
 
 class AudioIterator:
@@ -34,10 +43,38 @@ class AudioIterator:
             self.config = yaml.safe_load(f)
         LOGGER.info(f"Parsed AudioIterator config ({config}): {self.config}")
         self.sampling_rate = sampling_rate
+        self.samples_skipper: Optional[SamplesSkipper] = None
+
+    def add_generated_samples_skipper(self, output_file: str):
+        self.samples_skipper = GeneratedSamplesSkipper(output_file)
+
+    def should_skip_sample(self, sample_id):
+        return self.samples_skipper is not None and self.samples_skipper.should_skip(sample_id)
 
     def __iter__(self):
         raise NotImplementedError(
             f"Subclass {self.__class__} of AudioIterator must implement __iter__")
+
+
+class GeneratedSamplesSkipper(SamplesSkipper):
+    """
+    A class that determines whether a sample has to be skipped or not based on whether it is
+    already present in an output file or not.
+    """
+    def __init__(self, output_file: str):
+        self.generated_ids = self._load_generated_ids(output_file)
+
+    @staticmethod
+    def _load_generated_ids(output_file):
+        generated_ids = set()
+        with open(output_file, 'r') as f:
+            reader = csv.DictReader(f, delimiter='\t', quoting=csv.QUOTE_NONE)
+            for segm in reader:
+                generated_ids.add(segm['id'])
+        return generated_ids
+
+    def should_skip(self, sample_id):
+        return sample_id in self.generated_ids
 
 
 class VoxpopuliIterator(AudioIterator):
@@ -74,6 +111,8 @@ class VoxpopuliIterator(AudioIterator):
                 if row_lang != self.lang:
                     continue
                 row_id = f"{row['event_id']}_{row['segment_no']}"
+                if self.should_skip_sample(row_id):
+                    continue
                 raw_content = self._read_audio_file(
                     f"{self.basedir}/{row_lang}/{row_year}/{row_id}.ogg")
                 yield {

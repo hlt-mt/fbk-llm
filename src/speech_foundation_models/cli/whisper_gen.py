@@ -67,13 +67,19 @@ def main(args: argparse.Namespace):
     )
     audio_iterator = args.audio_iterator(
         args.audio_iterator_config, processor.feature_extractor.sampling_rate)
+    if args.append:
+        assert os.path.isfile(args.output), \
+            f"{args.output} does not exist and is required in append mode"
+        audio_iterator.add_generated_samples_skipper(args.output)
 
     with torch.no_grad():
         i = 0
-        with open(args.output, 'w') as f_w:
+        write_open_mode = 'a' if args.append else 'w'
+        with open(args.output, write_open_mode) as f_w:
             writer = csv.DictWriter(
                 f_w, ["id", "language", "text"], delimiter='\t')
-            writer.writeheader()
+            if not args.append:
+                writer.writeheader()
             LOGGER.info("Starting transcription")
             for output_row in transcriber(iter(audio_iterator)):
                 i += 1
@@ -103,6 +109,10 @@ def cli_script():
     add_whisper_args(parser)
     parser.add_argument(
         '--output', '-o', type=str, required=True, help="the path to the output file")
+    parser.add_argument(
+        '--append', '-a', default=False, action='store_true',
+        help='if set, restart the transcription skipping the samples already present in the '
+             'output file and append to it the missing ones.')
     main(parser.parse_args())
 
 
