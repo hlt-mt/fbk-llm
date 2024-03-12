@@ -106,7 +106,7 @@ class VoxpopuliIterator(AudioIterator):
         with open(self.tsv_segments, 'r') as f:
             reader = csv.DictReader(f, delimiter='\t', quoting=csv.QUOTE_NONE)
             for row in reader:
-                row_lang = row['event_id'].split("_")[1].strip()
+                row_lang = row['event_id'].rsplit("_", maxsplit=1)[1].strip()
                 row_year = row['event_id'][:4]
                 if row_lang != self.lang:
                     continue

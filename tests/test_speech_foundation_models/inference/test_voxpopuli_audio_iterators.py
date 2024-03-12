@@ -61,6 +61,28 @@ class VoxpopuliIteratorTestCase(unittest.TestCase):
     @patch(
         f"{VoxpopuliIterator.__module__}.{VoxpopuliIterator.__name__}._read_audio_file",
         return_value=np.array([1]))
+    def test_weird_format_id(self, mock_read_audio_file):
+        with patch('builtins.open', new_callable=mock_open, read_data=VALID_CONFIG_YAML):
+            vox_iter = VoxpopuliIterator("config.yaml", 16000)
+        fake_tsv_content = \
+            'event_id\tsegment_no\tstart\tend\n' \
+            '20090224-1736-committee-afet_20090224-1736-COMMITTEE-AFET_it\t0\t1\t2\n'
+        with patch('builtins.open', new_callable=mock_open, read_data=fake_tsv_content):
+            generated_items = list(vox_iter)
+        self.assertEqual(1, len(generated_items))
+        self.assertDictEqual({
+            "id": "20090224-1736-committee-afet_20090224-1736-COMMITTEE-AFET_it_0",
+            "raw": np.array([1]),
+            "sampling_rate": 16000}, generated_items[0])
+        args, _ = mock_read_audio_file.call_args
+        self.assertEqual(
+            f"{os.path.dirname(__file__)}/resources/it/2009/"
+            "20090224-1736-committee-afet_20090224-1736-COMMITTEE-AFET_it_0.ogg",
+            args[0])
+
+    @patch(
+        f"{VoxpopuliIterator.__module__}.{VoxpopuliIterator.__name__}._read_audio_file",
+        return_value=np.array([1]))
     def test_skipping_generated_samples(self, mock_read_audio_file):
         with patch('builtins.open', new_callable=mock_open, read_data=VALID_CONFIG_YAML):
             vox_iter = VoxpopuliIterator("config.yaml", 16000)
