@@ -85,6 +85,7 @@ def main(args: argparse.Namespace):
                 i += 1
                 if i % args.logging_freq == 0:
                     LOGGER.info(f"Processed {i} samples")
+                    f_w.flush()
                 assert len(output_row["chunks"]) == 1, \
                     f"The following output has more than one chunk: {output_row}"
                 writer.writerow({
