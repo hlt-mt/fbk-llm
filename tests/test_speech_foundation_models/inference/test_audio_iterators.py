@@ -19,7 +19,7 @@ from speech_foundation_models.inference.asr_args import AudioIteratorArgparse
 class AudioIteratorsTestCase(unittest.TestCase):
     def test_available_iterators(self):
         self.assertListEqual(
-            ["voxpopuli"],
+            ["librilight", "voxpopuli"],
             list(AudioIteratorArgparse.AVAILABLE_ITERATORS.keys()))
 
 
