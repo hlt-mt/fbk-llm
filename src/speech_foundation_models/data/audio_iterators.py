@@ -46,6 +46,7 @@ class AudioIterator:
         LOGGER.info(f"Parsed AudioIterator config ({config}): {self.config}")
         self.sampling_rate = sampling_rate
         self.samples_skipper: Optional[SamplesSkipper] = None
+        self._additional_read_args = {}
 
     def add_generated_samples_skipper(self, output_file: str):
         self.samples_skipper = GeneratedSamplesSkipper(output_file)
@@ -59,7 +60,7 @@ class AudioIterator:
 
     def _read_audio_file(self, filename):
         audio_content, sample_rate = soundfile.read(
-            filename, dtype='float32', always_2d=True)
+            filename, dtype='float32', always_2d=True, **self._additional_read_args)
         assert sample_rate == self.sampling_rate, \
             (f"Audio with sampling rate ({sample_rate}) not expected. "
              f"Expected rate was: {self.sampling_rate}")
@@ -102,7 +103,12 @@ class VoxpopuliIterator(AudioIterator):
         super().__init__(config, sampling_rate)
         self.lang = self._get_conf("lang")
         self.tsv_segments = self._get_conf("tsv_segments")
+        self.truncate_exceeding_30s = self.config.get("truncate_exceeding_30s", True)
         self.basedir = os.path.dirname(self.tsv_segments)
+        # As Whisper breaks if segments longer than 30s are fed, and in Voxpopuli some samples
+        # contain a few frames more than 30s, ensure that we read at most 30s
+        if self.truncate_exceeding_30s:
+            self._additional_read_args["frames"] = self.sampling_rate * 30
 
     def __iter__(self):
         with open(self.tsv_segments, 'r') as f:
