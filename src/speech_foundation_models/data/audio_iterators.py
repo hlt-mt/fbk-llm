@@ -16,6 +16,7 @@ import logging
 import math
 import os
 import pathlib
+from itertools import groupby
 from typing import Any, Optional
 
 import soundfile
@@ -175,3 +176,38 @@ class LibrilightIterator(AudioIterator):
                             "raw": raw_content,
                             "sampling_rate": self.sampling_rate
                         }
+
+
+class YamlIterator(AudioIterator):
+    """
+    Iterator that returns the audio segments defined in a YAML file like that used in the
+    MuST-C corpus or returned by SHAS.
+    It needs as configuration (to be included in the YAML config file):
+     - base directory that contains the audios referred to in the YAML segment definition (basedir)
+     - the path to the YAML file defining the segments (yaml_segment_definition)
+    """
+    def __init__(self, config: str, sampling_rate: int):
+        super().__init__(config, sampling_rate)
+        self.basedir = pathlib.Path(self._get_conf("basedir"))
+        self.yaml_segment_definition = pathlib.Path(self._get_conf("yaml_segment_definition"))
+
+    def __iter__(self):
+        with open(self.yaml_segment_definition) as f:
+            segments = yaml.load(f, Loader=yaml.BaseLoader)
+        for wav_filename, _seg_group in groupby(segments, lambda x: x["wav"]):
+            wav_path = self.basedir / wav_filename
+            seg_group = sorted(_seg_group, key=lambda x: float(x["offset"]))
+            wav_content = None
+            for i, segment in enumerate(seg_group):
+                row_id = f"{wav_path.name.replace('.wav', '')}_{i}"
+                if self.should_skip_sample(row_id):
+                    continue
+                if wav_content is None:
+                    wav_content = self._read_audio_file(wav_path.as_posix())
+                offset = int(float(segment["offset"]) * self.sampling_rate)
+                n_frames = int(float(segment["duration"]) * self.sampling_rate)
+                yield {
+                    "id": row_id,
+                    "raw": wav_content[offset:offset + n_frames],
+                    "sampling_rate": self.sampling_rate
+                }
