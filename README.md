@@ -5,7 +5,7 @@ on foundation models and LLMs.
 If using this repository, please cite the related work.
 For detailed information regarding a specific work, refer to the dedicated README:
 
-
+ - [[EMNLP2024] **MOSEL: 950,000 Hours of Speech Data for Open-Source Speech Foundation Model Training on EU Languages**](works/MOSEL.md) 
 
 ## 🖥 Installation
 
