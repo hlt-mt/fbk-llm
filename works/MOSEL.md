@@ -1,5 +1,13 @@
 # MOSEL: 950,000 Hours of Speech Data for Open-Source Speech Foundation Model Training on EU Languages
 
+## Data Download and Preparation
+
+Download the VoxPopuli data following the [official README for downloading the unlabelled data](https://github.com/facebookresearch/voxpopuli/blob/main/README.md#unlabelled-data). Follow the README to obtain the data for all the language codes (`--subset`) listed in the [MOSEL HuggingFace release](https://huggingface.co/datasets/FBK-MT/mosel#dataset-statistics-in-hours). Once segmented using the default script, we converted the `.ogg` files into `.wav` files with [ffmpeg](https://ffmpeg.org/) using `ffmpeg -i OGG_FILE -ac 1 -ar 16000 WAV_FILE`.
+
+Download the LibriLight data following the [Data Preparation and Download README](https://github.com/facebookresearch/libri-light/blob/main/data_preparation/README.md) with the default parameters. Then, for the [Segmentation step](https://github.com/facebookresearch/libri-light/blob/main/data_preparation/README.md#1b-segmenting), use `python cut_by_vad.py --input_dir INPUT_DIR --output_dir OUTPUT_DIR --target_len_sec=30` to obtain the audio files compatible with what is present in MOSEL.
+
+## Data Transcription
+
 All the transcripts of the MOSEL dataset were obtained with the code in this repository, using the `whisper-gen` command.
 Below we describe the steps to replicate our procedure and results.
 
